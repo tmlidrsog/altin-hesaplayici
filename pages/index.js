@@ -15,27 +15,35 @@ export default function Home() {
   const [usdData, setUsdData] = useState([]);
   const [goldData, setGoldData] = useState([]);
   const [labels, setLabels] = useState([]);
+  const [error, setError] = useState(null);
 
   const fetchData = async () => {
     try {
-      // Replace these with actual API calls if available
       const usdRes = await axios.get("https://api.exchangerate.host/latest?base=USD&symbols=TRY");
       const goldRes = await axios.get("https://api.metalpriceapi.com/v1/latest?base=USD&currencies=XAU&apikey=demo");
 
       const now = new Date().toLocaleTimeString();
+      const usd = usdRes.data?.rates?.TRY;
+      const gold = goldRes.data?.rates?.XAU;
 
-      setUsdData((prev) => [...prev.slice(-9), usdRes.data.rates.TRY]);
-      setGoldData((prev) => [...prev.slice(-9), goldRes.data.rates.XAU]);
+      if (!usd || !gold) {
+        setError("Veriler alınamadı.");
+        return;
+      }
+
+      setUsdData((prev) => [...prev.slice(-9), usd]);
+      setGoldData((prev) => [...prev.slice(-9), gold]);
       setLabels((prev) => [...prev.slice(-9), now]);
+      setError(null);
     } catch (err) {
-      console.error("Veri çekme hatası:", err.message);
+      setError("Veri çekme hatası: " + err.message);
     }
   };
 
   useEffect(() => {
-    fetchData(); // sayfa açılır açılmaz
-    const interval = setInterval(fetchData, 10000); // her 10 saniyede bir
-    return () => clearInterval(interval); // bileşen yok olunca durdur
+    fetchData();
+    const interval = setInterval(fetchData, 10000);
+    return () => clearInterval(interval);
   }, []);
 
   const usdChart = {
@@ -65,12 +73,17 @@ export default function Home() {
   return (
     <div style={{ backgroundColor: "#111", color: "#fff", minHeight: "100vh", padding: "2rem" }}>
       <h1 style={{ textAlign: "center" }}>Altın Hesaplayıcı</h1>
-      <div style={{ maxWidth: "800px", margin: "auto" }}>
-        <h2>Dolar/TL</h2>
-        <Line data={usdChart} />
-        <h2 style={{ marginTop: "2rem" }}>Ons Altın (USD)</h2>
-        <Line data={goldChart} />
-      </div>
+
+      {error ? (
+        <p style={{ color: "red", textAlign: "center" }}>{error}</p>
+      ) : (
+        <div style={{ maxWidth: "800px", margin: "auto" }}>
+          <h2>Dolar/TL</h2>
+          <Line data={usdChart} />
+          <h2 style={{ marginTop: "2rem" }}>Ons Altın (USD)</h2>
+          <Line data={goldChart} />
+        </div>
+      )}
     </div>
   );
 }
