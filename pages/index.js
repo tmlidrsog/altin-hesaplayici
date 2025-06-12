@@ -18,27 +18,28 @@ export default function Home() {
   const [error, setError] = useState(null);
 
   const fetchData = async () => {
-    try {
-      const usdRes = await axios.get("https://api.exchangerate.host/latest?base=USD&symbols=TRY");
-      const goldRes = await axios.get("https://api.metalpriceapi.com/v1/latest?base=USD&currencies=XAU&apikey=demo");
+  try {
+    const usdRes = await axios.get("https://api.exchangerate.host/latest?base=USD&symbols=TRY");
+    const goldRes = await axios.get("https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=try");
 
-      const now = new Date().toLocaleTimeString();
-      const usd = usdRes.data?.rates?.TRY;
-      const gold = goldRes.data?.rates?.XAU;
+    const now = new Date().toLocaleTimeString();
+    const usd = usdRes.data?.rates?.TRY;
+    const goldUsd = 2350; // Ons altın fiyatını manuel koyduk (USD cinsinden)
 
-      if (!usd || !gold) {
-        setError("Veriler alınamadı.");
-        return;
-      }
-
-      setUsdData((prev) => [...prev.slice(-9), usd]);
-      setGoldData((prev) => [...prev.slice(-9), gold]);
-      setLabels((prev) => [...prev.slice(-9), now]);
-      setError(null);
-    } catch (err) {
-      setError("Veri çekme hatası: " + err.message);
+    if (!usd) {
+      setError("Dolar verisi alınamadı.");
+      return;
     }
-  };
+
+    setUsdData((prev) => [...prev.slice(-9), usd]);
+    setGoldData((prev) => [...prev.slice(-9), goldUsd]);
+    setLabels((prev) => [...prev.slice(-9), now]);
+    setError(null);
+  } catch (err) {
+    setError("Veri çekme hatası: " + err.message);
+  }
+};
+
 
   useEffect(() => {
     fetchData();
