@@ -1,120 +1,105 @@
 import { useState } from "react";
-import { Line } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  LineElement,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-} from "chart.js";
-
-ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement);
+import Script from "next/script";
 
 export default function Home() {
-  const [usdTry, setUsdTry] = useState("");
-  const [onsUsd, setOnsUsd] = useState("");
-  const [gramAltin, setGramAltin] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [gramMiktari, setGramMiktari] = useState("");
-  const [toplamDeger, setToplamDeger] = useState(null);
+  const [usdTry, setUsdTry] = useState(32.5);
+  const [xauUsd, setXauUsd] = useState(2300);
+  const [gramGold, setGramGold] = useState(0);
+  const [totalValue, setTotalValue] = useState(0);
 
-  const hesapla = () => {
-    const usd = parseFloat(usdTry);
-    const ons = parseFloat(onsUsd);
-
-    if (!usd || !ons) {
-      alert("Geçerli değerler giriniz.");
-      return;
-    }
-
-    const gram = (ons / 31.10) * usd;
-    setGramAltin(gram.toFixed(2));
-
-    const zaman = new Date().toLocaleTimeString();
-    setHistory((prev) => [...prev.slice(-9), { zaman, gram }]);
-  };
-
-  const hesaplaToplam = () => {
-    const miktar = parseFloat(gramMiktari);
-    const fiyat = parseFloat(gramAltin);
-    if (!miktar || !fiyat) return;
-    setToplamDeger((miktar * fiyat).toFixed(2));
-  };
-
-  const grafikData = {
-    labels: history.map((h) => h.zaman),
-    datasets: [
-      {
-        label: "Gram Altın (TL)",
-        data: history.map((h) => h.gram),
-        borderColor: "gold",
-        tension: 0.4,
-      },
-    ],
+  const handleCalculate = () => {
+    const gramPrice = (xauUsd / 31.1035) * usdTry;
+    setTotalValue((gramGold * gramPrice).toFixed(2));
   };
 
   return (
-    <div style={{ backgroundColor: "#111", color: "#fff", minHeight: "100vh", padding: "2rem" }}>
-      <h1 style={{ textAlign: "center" }}>Altın Hesaplayıcı (Manuel Giriş)</h1>
+    <div style={{ backgroundColor: "#111", color: "#fff", minHeight: "100vh", padding: "2rem", fontFamily: "Arial, sans-serif" }}>
+      <h1 style={{ textAlign: "center", fontSize: "2rem", marginBottom: "2rem" }}>💰 Altın Hesaplayıcı</h1>
 
-      <div style={{ maxWidth: "600px", margin: "auto", display: "flex", flexDirection: "column", gap: "1rem" }}>
-        <label>
-          Dolar/TL Kuru:
-          <input type="number" value={usdTry} onChange={(e) => setUsdTry(e.target.value)} style={inputStyle} />
-        </label>
+      {/* Dolar/TL Grafiği */}
+      <section>
+        <h2>💵 Dolar/TL Grafiği</h2>
+        <div className="tradingview-widget-container" id="usdtry_widget"></div>
+        <Script src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" strategy="lazyOnload">
+          {`
+          {
+            "symbol": "FX_IDC:USDTRY",
+            "width": "100%",
+            "height": "200",
+            "locale": "tr",
+            "colorTheme": "dark",
+            "isTransparent": false,
+            "autosize": true
+          }
+          `}
+        </Script>
+      </section>
 
-        <label>
-          Ons Altın (USD):
-          <input type="number" value={onsUsd} onChange={(e) => setOnsUsd(e.target.value)} style={inputStyle} />
-        </label>
+      <hr style={{ margin: "2rem 0", borderColor: "#444" }} />
 
-        <button onClick={hesapla} style={buttonStyle}>Gram Altın Hesapla</button>
+      {/* Ons Altın Grafiği */}
+      <section>
+        <h2>🥇 Ons Altın (XAU/USD) Grafiği</h2>
+        <div className="tradingview-widget-container" id="xauusd_widget"></div>
+        <Script src="https://s3.tradingview.com/external-embedding/embed-widget-mini-symbol-overview.js" strategy="lazyOnload">
+          {`
+          {
+            "symbol": "OANDA:XAUUSD",
+            "width": "100%",
+            "height": "200",
+            "locale": "tr",
+            "colorTheme": "dark",
+            "isTransparent": false,
+            "autosize": true
+          }
+          `}
+        </Script>
+      </section>
 
-        {gramAltin && (
-          <p>
-            📌 Hesaplanan Gram Altın Fiyatı: <strong>{gramAltin} TL</strong>
-          </p>
-        )}
+      <hr style={{ margin: "2rem 0", borderColor: "#444" }} />
 
-        <hr />
-
-        <label>
-          Sahip Olduğun Gram Altın:
-          <input type="number" value={gramMiktari} onChange={(e) => setGramMiktari(e.target.value)} style={inputStyle} />
-        </label>
-
-        <button onClick={hesaplaToplam} style={buttonStyle}>Toplam Değeri Hesapla</button>
-
-        {toplamDeger && (
-          <p>
-            💰 Toplam Değer: <strong>{toplamDeger} TL</strong>
-          </p>
-        )}
-      </div>
-
-      {history.length > 0 && (
-        <div style={{ maxWidth: "800px", margin: "2rem auto" }}>
-          <h2>📊 Gram Altın Fiyat Geçmişi</h2>
-          <Line data={grafikData} />
+      {/* Manuel Giriş ve Hesaplama */}
+      <section>
+        <h2>📝 Manuel Veri Girişi</h2>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Dolar/TL: </label>
+          <input type="number" value={usdTry} onChange={(e) => setUsdTry(parseFloat(e.target.value))} style={inputStyle} />
         </div>
-      )}
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Ons Altın ($): </label>
+          <input type="number" value={xauUsd} onChange={(e) => setXauUsd(parseFloat(e.target.value))} style={inputStyle} />
+        </div>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Gram Altın Miktarı: </label>
+          <input type="number" value={gramGold} onChange={(e) => setGramGold(parseFloat(e.target.value))} style={inputStyle} />
+        </div>
+        <button onClick={handleCalculate} style={buttonStyle}>Toplam Değeri Hesapla</button>
+
+        {totalValue > 0 && (
+          <p style={{ marginTop: "1rem", fontSize: "1.2rem", color: "#0f0" }}>
+            💸 Toplam TL Karşılığı: <strong>{totalValue} TL</strong>
+          </p>
+        )}
+      </section>
     </div>
   );
 }
 
 const inputStyle = {
-  width: "100%",
-  padding: "0.5rem",
-  marginTop: "0.25rem",
-  borderRadius: "8px",
-  border: "1px solid #ccc",
+  marginLeft: "1rem",
+  padding: "0.4rem",
+  backgroundColor: "#222",
+  border: "1px solid #555",
+  color: "#fff",
+  borderRadius: "4px",
 };
 
 const buttonStyle = {
-  padding: "0.5rem",
-  backgroundColor: "#444",
-  color: "#fff",
+  padding: "0.6rem 1.2rem",
+  backgroundColor: "#0f0",
+  color: "#000",
   border: "none",
-  borderRadius: "8px",
+  borderRadius: "6px",
   cursor: "pointer",
+  fontWeight: "bold"
 };
